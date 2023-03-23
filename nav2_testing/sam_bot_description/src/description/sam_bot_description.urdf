@@ -38,7 +38,7 @@
   </xacro:macro>
 
   <!-- Robot Base -->
-  <link name="chassis">
+  <link name="base_link">
     <visual>
       <geometry>
         <box size="${base_length} ${base_width} ${base_height}"/>
@@ -61,7 +61,7 @@
   <link name="base_footprint"/>
 
   <joint name="base_joint" type="fixed">
-    <parent link="chassis"/>
+    <parent link="base_link"/>
     <child link="base_footprint"/>
     <origin xyz="0.0 0.0 ${-(wheel_radius+wheel_zoff)}" rpy="0 0 0"/>
   </joint>
@@ -90,7 +90,7 @@
     </link>
 
     <joint name="${prefix}_joint" type="continuous">
-      <parent link="chassis"/>
+      <parent link="base_link"/>
       <child link="${prefix}_link"/>
       <origin xyz="${x_reflect*wheel_xoff} ${y_reflect*(base_width/2+wheel_ygap)} ${-wheel_zoff}" rpy="0 0 0"/>
       <axis xyz="0 1 0"/>
@@ -122,7 +122,7 @@
   </link>
 
   <joint name="caster_joint" type="fixed">
-    <parent link="chassis"/>
+    <parent link="base_link"/>
     <child link="front_caster"/>
     <origin xyz="${caster_xoff} 0.0 ${-(base_height/2)}" rpy="0 0 0"/>
   </joint>
@@ -146,7 +146,7 @@
   </link>
 
   <joint name="imu_joint" type="fixed">
-    <parent link="chassis"/>
+    <parent link="base_link"/>
     <child link="imu_link"/>
     <origin xyz="0 0 0.01"/>
   </joint>
@@ -156,8 +156,8 @@
     <sensor name="imu_sensor" type="imu">
     <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
         <ros>
-          <namespace>/imu</namespace>
-          <remapping>~/out:=data</remapping>
+          <namespace>/demo</namespace>
+          <remapping>~/out:=imu</remapping>
         </ros>
         <initial_orientation_as_reference>false</initial_orientation_as_reference>
       </plugin>
@@ -225,7 +225,7 @@
   <gazebo>
     <plugin name='diff_drive' filename='libgazebo_ros_diff_drive.so'>
       <ros>
-        <namespace>/ground_truth</namespace>
+        <namespace>/demo</namespace>
       </ros>
 
       <!-- wheels -->
@@ -245,8 +245,8 @@
       <publish_odom_tf>false</publish_odom_tf>
       <publish_wheel_tf>true</publish_wheel_tf>
 
-      <odometry_frame>track</odometry_frame>
-      <robot_base_frame>base_footprint</robot_base_frame>
+      <odometry_frame>odom</odometry_frame>
+      <robot_base_frame>base_link</robot_base_frame>
     </plugin>
   </gazebo>
 
@@ -273,7 +273,7 @@
   </link>
 
   <joint name="lidar_joint" type="fixed">
-    <parent link="chassis"/>
+    <parent link="base_link"/>
     <child link="lidar_link"/>
     <origin xyz="0 0 0.12" rpy="0 0 0"/>
   </joint>
@@ -336,7 +336,7 @@
   </link>
 
   <joint name="camera_joint" type="fixed">
-    <parent link="chassis"/>
+    <parent link="base_link"/>
     <child link="camera_link"/>
     <origin xyz="0.215 0 0.05" rpy="0 0 0"/>
   </joint>
@@ -350,7 +350,7 @@
   </joint>
 
   <gazebo reference="camera_link">
-    <sensor name="zed2i" type="depth">
+    <sensor name="depth_camera" type="depth">
       <visualize>true</visualize>
       <update_rate>30.0</update_rate>
       <camera name="camera">
@@ -366,19 +366,10 @@
         </clip>
       </camera>
       <plugin name="depth_camera_controller" filename="libgazebo_ros_camera.so">
-        <ros>
-          <remapping>/zed2i/depth/camera_info:=/zed2i/zed_node/depth/camera_info</remapping>
-          <remapping>/zed2i/depth/image_raw:=/zed2i/zed_node/depth/depth_registered</remapping>
-          <remapping>/zed2i/image_raw:=/zed2i/zed_node/rgb/image_rect_color</remapping>
-          <remapping>/zed2i/camera_info:=/zed2i/zed_node/rgb/camera_info</remapping>
-          <remapping>/zed2i/points:=/zed2i/zed_node/point_cloud/cloud_registered</remapping>          
-        </ros>
-        <baseline>0.12</baseline>
+        <baseline>0.2</baseline>
         <alwaysOn>true</alwaysOn>
         <updateRate>0.0</updateRate>
-        <max_depth>15.0</max_depth>
-        <min_depth>0.1</min_depth>
-        <frame_name>zed2i_depth_camera_frame</frame_name>
+        <frame_name>camera_depth_frame</frame_name>
         <pointCloudCutoff>0.5</pointCloudCutoff>
         <pointCloudCutoffMax>3.0</pointCloudCutoffMax>
         <distortionK1>0</distortionK1>

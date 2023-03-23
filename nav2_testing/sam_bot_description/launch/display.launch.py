@@ -8,6 +8,7 @@ def generate_launch_description():
     default_model_path = os.path.join(pkg_share, 'src/description/sam_bot_description.urdf')
     default_rviz_config_path = os.path.join(pkg_share, 'rviz/urdf_config.rviz')
     default_nav_params_path = os.path.join(pkg_share, 'config/nav2_params.yaml')
+    world_path=os.path.join(pkg_share, 'world/my_world.sdf'),
 
     robot_state_publisher_node = launch_ros.actions.Node(
         package='robot_state_publisher',
@@ -40,7 +41,13 @@ def generate_launch_description():
         output='screen',
         parameters=[os.path.join(pkg_share, 'config/ekf.yaml'), {'use_sim_time': LaunchConfiguration('use_sim_time')}]
     )
-    world_path=os.path.join(pkg_share, 'world/my_world.sdf'),
+    steering_gui_node = launch_ros.actions.Node(
+        package='rqt_robot_steering',
+        executable='rqt_robot_steering',
+        name='rqt_robot_steering',
+        output='screen',
+        parameters=[{'use_sim_time': LaunchConfiguration('use_sim_time')}],
+    )
 
     slam_pkg_share = launch_ros.substitutions.FindPackageShare(package='slam_toolbox').find('slam_toolbox')
     slam_async_launch = launch.actions.IncludeLaunchDescription(
@@ -48,6 +55,7 @@ def generate_launch_description():
             os.path.join(slam_pkg_share, 'launch', 'online_async_launch.py')
         )
     )
+
     nav2_pkg_share = launch_ros.substitutions.FindPackageShare(package='nav2_bringup').find('nav2_bringup')
     nav2_launch = launch.actions.IncludeLaunchDescription(
         launch.launch_description_sources.PythonLaunchDescriptionSource(
@@ -55,6 +63,7 @@ def generate_launch_description():
         ),
         launch_arguments={'params_file': default_nav_params_path}.items(),
     )
+
     return launch.LaunchDescription([
         launch.actions.DeclareLaunchArgument(name='model', default_value=default_model_path,
                                             description='Absolute path to robot urdf file'),
@@ -66,8 +75,9 @@ def generate_launch_description():
         joint_state_publisher_node,
         robot_state_publisher_node,
         spawn_entity,
-        robot_localization_node,
+        # robot_localization_node,
         rviz_node,
+        steering_gui_node,
         # slam_async_launch,
         # nav2_launch
     ])
